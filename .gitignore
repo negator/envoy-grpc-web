@@ -1,0 +1,5 @@
+bazel-bin
+bazel-genfiles
+bazel-godel
+bazel-out
+bazel-testlogs

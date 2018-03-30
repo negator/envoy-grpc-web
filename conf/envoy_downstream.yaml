@@ -1,0 +1,52 @@
+listeners:
+- address: tcp://0.0.0.0:6552
+  filters:
+  - name: http_connection_manager
+    type: read
+    config:
+      add_user_agent: true
+      codec_type: auto
+      stat_prefix: ingress_http
+      use_remote_address: true
+      route_config:
+        virtual_hosts:        
+        - name: default
+          domains: ["*"]
+          routes:
+          - prefix: "/"
+            timeout_ms: 0
+            cluster: default
+            cors:
+              allow_origin: ["*"]
+              allow_methods: "OPTIONS"
+              allow_headers: "Content-Type, Authorization, x-grpc-web, X-User-Agent"
+              allow_credentials: true                          
+      filters:    
+      - type: decoder
+        name: cors
+        config: {}
+      - type: auto 
+        name: grpc_web
+        config: {}      
+      - type: decoder
+        name: buffer
+        config:
+            max_request_bytes: 1000000
+            max_request_time_s: 120
+      - type: decoder
+        name: router        
+        config: {}
+
+statsd_udp_ip_address: 127.0.0.1:8125
+admin:
+  access_log_path: /var/log/admin_access.log
+  address: tcp://127.0.0.1:9901
+
+cluster_manager:
+  clusters:  
+  - name: default
+    features: http2    
+    connect_timeout_ms: 100
+    type: logical_dns
+    lb_type: round_robin    
+    hosts:  [{ url: tcp://docker.for.mac.localhost:6554 }]

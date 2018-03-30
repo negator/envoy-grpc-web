@@ -1,0 +1,34 @@
+listeners:
+- address: tcp://0.0.0.0:6553
+  filters:
+  - name: http_connection_manager
+    type: read
+    config:
+      add_user_agent: true
+      codec_type: http2
+      stat_prefix: ingress_http
+      use_remote_address: true
+      route_config:
+        virtual_hosts:        
+        - name: default
+          domains: ["*"]
+          routes:
+          - prefix: "/"            
+            cluster: default            
+      filters:      
+      - type: decoder
+        name: router
+        config: {}      
+statsd_udp_ip_address: 127.0.0.1:8125
+admin:
+  access_log_path: /var/log/admin_access.log
+  address: tcp://127.0.0.1:9901
+
+cluster_manager:
+  clusters:  
+  - name: default
+    connect_timeout_ms: 100
+    type: logical_dns
+    lb_type: round_robin
+    features: http2
+    hosts:  [{ url: tcp://docker.for.mac.localhost:50051 }]
